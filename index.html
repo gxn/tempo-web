@@ -588,6 +588,8 @@
     let currentSegmentType = null;
     let totalActive = 0;
     let totalIdle = 0;
+    let pausedDuration = 0;
+    let pauseStart = null;
 
     // Threshold: lower = more sensitive
     let threshold = 2;
@@ -954,7 +956,7 @@
     }
 
     function updateUI(volume, isPlaying) {
-      const elapsed = Date.now() - sessionStart;
+      const elapsed = Date.now() - sessionStart - pausedDuration;
 
       // Timer
       document.getElementById('timer').textContent = formatTimeLong(elapsed);
@@ -1074,6 +1076,8 @@
       segments = [];
       totalActive = 0;
       totalIdle = 0;
+      pausedDuration = 0;
+      pauseStart = null;
       volumeHistory = [];
       pendingStateChange = null;
       currentSegmentStart = Date.now();
@@ -1102,12 +1106,17 @@
         currentSegmentStart = null;
       }
 
+      pauseStart = Date.now();
       document.getElementById('statusBadge').className = 'status-badge idle';
       document.getElementById('statusText').textContent = 'Paused';
       showButtons('resumeBtn', 'stopBtn');
     }
 
     function resumeSession() {
+      if (pauseStart) {
+        pausedDuration += Date.now() - pauseStart;
+        pauseStart = null;
+      }
       sessionActive = true;
       currentSegmentStart = Date.now();
       currentSegmentType = 'idle';
